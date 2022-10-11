@@ -44,3 +44,44 @@ const mapUserData = users => {
     id: users._id.toString()
   };
 };
+
+export const getNFTs = async nftId => {
+  const client = new MongoClient(getURI());
+  let query = { }, options = { }, data = undefined;
+
+  try {
+    await client.connect();
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection('nfts');
+    
+    if (nftId) {
+      data = await collection.findOne({ _id: ObjectId(nftId) });
+    } else {
+      data = await collection.find(query, options).toArray();
+    }
+    
+  } catch (error) {
+    console.log(error);
+  } finally {
+    client.close();
+  }  
+
+  if (!data) {
+    return null;
+  }
+  
+  return mapNFTData(data);
+};
+
+const mapNFTData = nfts => {
+  /* if nft data is an array */
+  if (nfts.length > 0) {
+    return nfts.map(nft => ({
+      id: nft._id.toString(), description: nft.description, image: nft.image, name: nft.name, price: nft.price
+    }));
+  }
+
+  return {
+    id: nfts._id.toString(), description: nfts.description, image: nfts.image, name: nfts.name, price: nfts.price
+  };
+};
