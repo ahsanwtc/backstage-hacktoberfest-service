@@ -1,9 +1,10 @@
 import { getUsers } from '../functions';
 
 export default async function handler(req, res) {
+  const { method } = req;
   let message = '';
 
-  switch (req.method) {
+  switch (method) {
     case 'GET': {
       const users = await getUsers();
       if (users) {
@@ -12,6 +13,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: 'not found' });
     }
     default:
-      return res.status(404).json({ message: 'invalid request' });
+      res.setHeader('Allow', ['GET']);      
+      return res.status(405).end(`Method ${method} Not Allowed`);
   }
 }
