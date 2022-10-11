@@ -55,7 +55,7 @@ export const getNFTs = async nftId => {
     const collection = db.collection('nfts');
     
     if (nftId) {
-      // data = await collection.findOne({ _id: ObjectId(userId) });
+      data = await collection.findOne({ _id: ObjectId(nftId) });
     } else {
       data = await collection.find(query, options).toArray();
     }
@@ -81,8 +81,7 @@ const mapNFTData = nfts => {
     }));
   }
 
-  // return {
-  //   first_name: users.first_name, last_name: users.last_name, username: users.username, type: users.type, nfts_owned: users.nfts_owned,
-  //   id: users._id.toString()
-  // };
+  return {
+    id: nfts._id.toString(), description: nfts.description, image: nfts.image, name: nfts.name, price: nfts.price
+  };
 };
