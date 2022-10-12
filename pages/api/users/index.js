@@ -1,4 +1,4 @@
-import { getUsers } from '../functions';
+import { getUsers, putNftToUser } from '../functions';
 
 export default async function handler(req, res) {
   const { method } = req;
@@ -12,8 +12,18 @@ export default async function handler(req, res) {
       }
       return res.status(400).json({ message: 'not found' });
     }
+    case 'PUT': {
+      const { body: { userId, nftId }} = req;
+
+      if (!userId || !nftId) {
+        return res.status(400).json({ message: 'invalid request' });
+      }
+
+      const updated = await putNftToUser({ userId, nftId });
+      return res.status(updated.status).json({ user: updated.user, message: updated.message });
+    }
     default:
-      res.setHeader('Allow', ['GET']);      
+      res.setHeader('Allow', ['GET', 'PUT']);
       return res.status(405).end(`Method ${method} Not Allowed`);
   }
 }
