@@ -47,7 +47,7 @@ const mapUserData = users => {
 
 export const getNFTs = async nftId => {
   const client = new MongoClient(getURI());
-  let query = { }, options = { }, data = undefined, userData = undefined;
+  let query = { }, options = { }, data = undefined;
 
   try {
     await client.connect();
