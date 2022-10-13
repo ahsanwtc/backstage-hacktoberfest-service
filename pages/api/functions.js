@@ -47,7 +47,7 @@ const mapUserData = users => {
 
 export const getNFTs = async nftId => {
   const client = new MongoClient(getURI());
-  let query = { }, options = { }, data = undefined;
+  let query = { }, options = { }, data = undefined, userData = undefined;
 
   try {
     await client.connect();
@@ -69,21 +69,22 @@ export const getNFTs = async nftId => {
   if (!data) {
     return null;
   }
-  
-  return mapNFTData(data);
-};
 
-const mapNFTData = nfts => {
-  /* if nft data is an array */
-  if (nfts.length > 0) {
-    return nfts.map(nft => ({
-      id: nft._id.toString(), description: nft.description, image: nft.image, name: nft.name, price: nft.price
-    }));
+  /* if it is a single nft */
+  if (nftId) {
+    data = [data];
   }
 
-  return {
-    id: nfts._id.toString(), description: nfts.description, image: nfts.image, name: nfts.name, price: nfts.price
-  };
+  const nfts = [];
+  /* add artist info to nft */
+  for (const nft of data) {
+    const artist = await getUsers(nft.artist);
+    nfts.push({
+      id: nft._id.toString(), description: nft.description, image: nft.image, name: nft.name, price: nft.price,
+      artist: { id: artist.id, first_name: artist.first_name, last_name: artist.last_name, username: artist.username }
+    });
+  }  
+  return nfts;
 };
 
 /* PUT */
