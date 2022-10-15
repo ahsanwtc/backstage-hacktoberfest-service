@@ -47,18 +47,30 @@ const mapUserData = users => {
 
 export const getNFTs = async nftId => {
   const client = new MongoClient(getURI());
-  let query = { }, options = { }, data = undefined;
+  let data = undefined;
 
   try {
     await client.connect();
     const db = client.db(process.env.DB_NAME);
     const collection = db.collection('nfts');
+    const lookup = {
+      $lookup: {
+        from: "users",
+        localField: "artist",
+        foreignField: "_id",
+        as: "artist_info"
+      }
+    };
     
     if (nftId) {
-      data = await collection.findOne({ _id: ObjectId(nftId) });
+      data = await collection.aggregate([
+        { $match : { _id : ObjectId(nftId) } },
+        lookup
+    ]).toArray();
     } else {
-      data = await collection.find(query, options).toArray();
+      data = await collection.aggregate([lookup]).toArray();
     }
+
     
   } catch (error) {
     console.log(error);
@@ -70,20 +82,13 @@ export const getNFTs = async nftId => {
     return null;
   }
 
-  /* if it is a single nft */
-  if (nftId) {
-    data = [data];
-  }
-
-  const nfts = [];
-  /* add artist info to nft */
-  for (const nft of data) {
-    const artist = await getUsers(nft.artist);
-    nfts.push({
+  const nfts = data.map(nft => {
+    const artist = nft.artist_info[0];
+    return {
       id: nft._id.toString(), description: nft.description, image: nft.image, name: nft.name, price: nft.price,
-      artist: { id: artist.id, first_name: artist.first_name, last_name: artist.last_name, username: artist.username }
-    });
-  }  
+      artist: { id: artist._id.toString(), first_name: artist.first_name, last_name: artist.last_name, username: artist.username }
+    };    
+  });  
   return nfts;
 };
 
