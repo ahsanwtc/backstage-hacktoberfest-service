@@ -57,7 +57,18 @@ export const getNFTs = async nftId => {
     if (nftId) {
       data = await collection.findOne({ _id: ObjectId(nftId) });
     } else {
-      data = await collection.find(query, options).toArray();
+      // data = await collection.find(query, options).toArray();
+      data = await collection.aggregate([
+        {
+          $lookup:
+            {
+              from: "users",
+              localField: "artist",
+              foreignField: "_id",
+              as: "artist_info"
+            }
+       }
+     ]).toArray();
     }
     
   } catch (error) {
@@ -75,15 +86,13 @@ export const getNFTs = async nftId => {
     data = [data];
   }
 
-  const nfts = [];
-  /* add artist info to nft */
-  for (const nft of data) {
-    const artist = await getUsers(nft.artist);
-    nfts.push({
+  const nfts = data.map(nft => {
+    const artist = nft.artist_info[0];
+    return {
       id: nft._id.toString(), description: nft.description, image: nft.image, name: nft.name, price: nft.price,
-      artist: { id: artist.id, first_name: artist.first_name, last_name: artist.last_name, username: artist.username }
-    });
-  }  
+      artist: { id: artist._id.toString(), first_name: artist.first_name, last_name: artist.last_name, username: artist.username }
+    };    
+  });  
   return nfts;
 };
 
