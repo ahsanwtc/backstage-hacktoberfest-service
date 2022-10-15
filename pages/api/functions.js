@@ -47,29 +47,30 @@ const mapUserData = users => {
 
 export const getNFTs = async nftId => {
   const client = new MongoClient(getURI());
-  let query = { }, options = { }, data = undefined;
+  let data = undefined;
 
   try {
     await client.connect();
     const db = client.db(process.env.DB_NAME);
     const collection = db.collection('nfts');
+    const lookup = {
+      $lookup: {
+        from: "users",
+        localField: "artist",
+        foreignField: "_id",
+        as: "artist_info"
+      }
+    };
     
     if (nftId) {
-      data = await collection.findOne({ _id: ObjectId(nftId) });
-    } else {
-      // data = await collection.find(query, options).toArray();
       data = await collection.aggregate([
-        {
-          $lookup:
-            {
-              from: "users",
-              localField: "artist",
-              foreignField: "_id",
-              as: "artist_info"
-            }
-       }
-     ]).toArray();
+        { $match : { _id : ObjectId(nftId) } },
+        lookup
+    ]).toArray();
+    } else {
+      data = await collection.aggregate([lookup]).toArray();
     }
+
     
   } catch (error) {
     console.log(error);
@@ -79,11 +80,6 @@ export const getNFTs = async nftId => {
 
   if (!data) {
     return null;
-  }
-
-  /* if it is a single nft */
-  if (nftId) {
-    data = [data];
   }
 
   const nfts = data.map(nft => {
