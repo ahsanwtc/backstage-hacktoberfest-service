@@ -1,12 +1,12 @@
 import { getNFTs } from '../functions';
 
 export default async function handler(req, res) {
-  const { method } = req;
+  const { method, query: { limit }} = req;
   let message = '';
 
   switch (method) {
     case 'GET': {
-      const nfts = await getNFTs();
+      const nfts = await getNFTs(undefined, limit);
       if (nfts) {
         return res.status(200).json({ nfts, message });
       }

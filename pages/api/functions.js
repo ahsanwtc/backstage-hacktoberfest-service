@@ -45,7 +45,10 @@ const mapUserData = users => {
   };
 };
 
-export const getNFTs = async nftId => {
+export const getNFTs = async (nftId, limit) => {
+  /* By default, limit is 25 */
+  limit = limit ? parseInt(limit) : 25;
+
   const client = new MongoClient(getURI());
   let data = undefined;
 
@@ -68,7 +71,7 @@ export const getNFTs = async nftId => {
         lookup
     ]).toArray();
     } else {
-      data = await collection.aggregate([lookup]).toArray();
+      data = await collection.aggregate([lookup, { $limit: limit }]).toArray();
     }
 
     
