@@ -1,5 +1,3 @@
-import { auth } from 'express-oauth2-jwt-bearer';
-
 // import { getUsers } from '../functions';
 
 export default async function handler(req, res) {
