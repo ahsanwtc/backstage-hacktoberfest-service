@@ -174,3 +174,27 @@ const addNftToUser = async ({ userId, nftId }) => {
 
   return data;
 };
+
+export const verifyToken = async token => {
+  const jwksClient = require('jwks-rsa');
+  const jwt = require('jsonwebtoken');
+  const client = jwksClient({ jwksUri: process.env.AUTH0_JWKSURI });
+
+  const getKey = (header, callback) => {
+    client.getSigningKey(header.kid, function(err, key) {
+      const signingKey = key.publicKey || key.rsaPublicKey;
+      callback(null, signingKey);
+    });
+  };
+
+  const options = { algorithms: ['RS256'] };
+  return new Promise(async response => {
+    jwt.verify(token, getKey, options, function(err, decoded) {
+      if (err) {
+        console.log(err);
+        return response(null);
+      }
+      return response(decoded);
+    });
+  });
+};

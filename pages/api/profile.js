@@ -1,35 +1,18 @@
-// import { getUsers } from '../functions';
+import { verifyToken } from './functions';
 
 export default async function handler(req, res) {
-  const checkJwt = auth({
-    audience: 'http://localhost:3000/api/',
-    issuerBaseURL: `https://ahsanwtc.eu.auth0.com/`,
-  });
+  const { query: { access_token }} = req;
+  const decoded = await verifyToken(access_token);
 
-  const token = await checkJwt();
-  console.log(token);
-  
-  // const { query: { userId }, method } = req;
-  
-  // if (method !== 'GET') {
-  //   res.setHeader('Allow', ['GET']);      
-  //   return res.status(405).end(`Method ${method} Not Allowed`);
-  // }
+  if (!decoded) {
+    return res.status(400).json({ message: 'invalid token' });
+  }
 
-  // const user = await getUsers(userId);
-
-  // if (!user) {
-  //   return res.status(404).json({
-  //     status: 404,
-  //     message: 'Not Found'
-  //   });
-  // }
-
-  // return res.status(200).json({ user });
-  return res.status(200).json({ message: 'ok' });
+  return res.status(200).json({ user: decoded });
 }
 
 /**
  * https://auth0.com/docs/api/authentication#login
  * https://auth0.com/docs/get-started/authentication-and-authorization-flow/call-your-api-using-the-authorization-code-flow
+ * https://ahsanwtc.eu.auth0.com/login?state=authorization-code&client=LpfwDeMU9OectsdzuYBroOVQmyuAU6wr&protocol=oauth2&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fauth%2Fcallback&scope=openid%20profile%20email&audience=mongo-db-auth
  */
