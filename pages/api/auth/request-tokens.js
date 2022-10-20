@@ -19,7 +19,7 @@ export default async function handler(req, res) {
   };
 
   try {
-    const result = await fetch('https://ahsanwtc.eu.auth0.com/oauth/token', {
+    const result = await fetch(process.env.AUTH0_OAUTH_TOKEN_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
