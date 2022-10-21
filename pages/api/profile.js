@@ -1,14 +1,19 @@
-import { verifyToken } from './functions';
+import { verifyToken, getUsers } from './functions';
 
 export default async function handler(req, res) {
   const { query: { access_token }} = req;
   const decoded = await verifyToken(access_token);
+  res.setHeader('Access-Control-Allow-Origin', '*');
 
   if (!decoded) {
     return res.status(400).json({ message: 'invalid token' });
   }
 
-  return res.status(200).json({ user: decoded });
+  const { sub } = decoded;
+  
+  const user = await getUsers(sub);
+
+  return res.status(200).json({ user });
 }
 
 /**
