@@ -10,7 +10,7 @@ export const getUsers = async userId => {
     const collection = db.collection('users');
     
     if (userId) {
-      data = await collection.findOne({ _id: ObjectId(userId) });
+      data = await collection.findOne({ sub: userId });
     } else {
       data = await collection.find(query, options).toArray();
     }
@@ -35,13 +35,13 @@ const mapUserData = users => {
   if (users.length > 0) {
     return users.map(user => ({
       first_name: user.first_name, last_name: user.last_name, username: user.username, type: user.type, nfts_owned: user.nfts_owned,
-      id: user._id.toString()
+      id: user._id.toString(), sub: user.sub, picture: user.picture
     }));
   }
 
   return {
     first_name: users.first_name, last_name: users.last_name, username: users.username, type: users.type, nfts_owned: users.nfts_owned,
-    id: users._id.toString()
+    id: users._id.toString(), sub: users.sub, picture: users.picture
   };
 };
 
@@ -173,4 +173,28 @@ const addNftToUser = async ({ userId, nftId }) => {
   }
 
   return data;
+};
+
+export const verifyToken = async token => {
+  const jwksClient = require('jwks-rsa');
+  const jwt = require('jsonwebtoken');
+  const client = jwksClient({ jwksUri: process.env.AUTH0_JWKSURI });
+
+  const getKey = (header, callback) => {
+    client.getSigningKey(header.kid, function(err, key) {
+      const signingKey = key.publicKey || key.rsaPublicKey;
+      callback(null, signingKey);
+    });
+  };
+
+  const options = { algorithms: ['RS256'] };
+  return new Promise(async response => {
+    jwt.verify(token, getKey, options, function(err, decoded) {
+      if (err) {
+        console.log(err);
+        return response(null);
+      }
+      return response(decoded);
+    });
+  });
 };
